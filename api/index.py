@@ -11,7 +11,6 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 # --- CHANGE 1: Point Flask to the correct template and static folders ---
 # The folders are one level up (../) from the /api directory.
 app = Flask(__name__,
-            static_folder=os.path.join(base_dir, '../static'),
             template_folder=os.path.join(base_dir, '../templates'))
 
 # --- CHANGE 2: Update CORS for deployment ---
