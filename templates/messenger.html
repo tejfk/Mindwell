@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MindWell Messenger</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #111827; --text-dark: #f3f4f6; --glass-bg-dark: rgba(31, 41, 55, 0.6);
+            --bg-light: #f3f4f6; --text-light: #111827; --glass-bg-light: rgba(255, 255, 255, 0.6);
+            --accent: #22d3ee; --bot-bubble-dark: #374151; --bot-bubble-light: #e5e7eb;
+            --user-bubble-dark: #4f46e5; --user-bubble-light: #6366f1;
+        }
+        html.dark { color-scheme: dark; }
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.5s ease; }
+        .dark body { background-color: var(--bg-dark); }
+        body { background-color: var(--bg-light); }
+        .animated-gradient { background: linear-gradient(-45deg, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: gradient-move 15s ease infinite; position: fixed; inset: 0; z-index: -1; filter: blur(100px); }
+        @keyframes gradient-move { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .glass-chat { background: var(--glass-bg-light); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); transition: background-color 0.5s ease; }
+        .dark .glass-chat { background: var(--glass-bg-dark); }
+        .chat-message { animation: slide-fade-in 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; opacity: 0; transform: translateY(20px); }
+        @keyframes slide-fade-in { to { opacity: 1; transform: translateY(0); } }
+        .typing-indicator span { height: 8px; width: 8px; background-color: #9ca3af; border-radius: 50%; display: inline-block; animation: bounce 1.4s infinite ease-in-out both; }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.3); border-radius: 3px; }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen p-4 bg-gray-100 dark:bg-gray-900">
+    <div class="animated-gradient"></div>
+
+    <div id="chat-container" class="glass-chat w-full max-w-2xl h-full max-h-[700px] rounded-2xl shadow-2xl flex flex-col opacity-0 translate-y-4 transition-all duration-500">
+        <!-- Header -->
+        <header class="p-4 border-b border-white/10 flex justify-between items-center flex-shrink-0">
+            <div>
+                <h1 class="font-bold text-lg text-gray-900 dark:text-white">Aura</h1>
+                <p class="text-xs text-green-500 flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>Online</p>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button id="tts-toggle" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" aria-label="Toggle Text-to-Speech">
+                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.828 2.828a1 1 0 011.414 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.414-1.414A3.986 3.986 0 0013 10a3.986 3.986 0 00-1.172-2.828 1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                </button>
+                <button id="theme-toggle" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" aria-label="Toggle Dark Mode">
+                    <svg id="theme-icon-sun" class="h-5 w-5 hidden text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                    <svg id="theme-icon-moon" class="h-5 w-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Chat Log -->
+        <div id="chat-log" class="flex-1 p-4 overflow-y-auto"></div>
+
+        <!-- Typing Indicator -->
+        <div id="typing-indicator" class="p-4 hidden">
+            <div class="flex items-center space-x-2">
+                <img src="https://i.ibb.co/6bs2P32/aura-avatar.png" alt="Aura" class="w-8 h-8 rounded-full">
+                <div class="typing-indicator"><span></span><span></span><span></span></div>
+            </div>
+        </div>
+        
+        <!-- Quick Replies -->
+        <div id="quick-replies" class="p-2 flex flex-wrap gap-2 justify-center border-t border-white/10"></div>
+        
+        <!-- Feedback -->
+        <div id="feedback-section" class="p-2 border-t border-white/10 text-center hidden">
+            <p class="text-xs mb-2 text-gray-600 dark:text-gray-400">Rate this conversation:</p>
+            <div id="emoji-feedback" class="flex justify-center space-x-2">
+                <button class="text-xl transform hover:scale-125 transition-transform">😞</button>
+                <button class="text-xl transform hover:scale-125 transition-transform">😐</button>
+                <button class="text-xl transform hover:scale-125 transition-transform">🙂</button>
+            </div>
+            <p id="feedback-thanks" class="text-xs text-green-500 h-4 mt-1"></p>
+        </div>
+
+        <!-- Input Area -->
+        <footer class="p-4 flex-shrink-0">
+            <div class="flex items-center space-x-2 bg-black/10 dark:bg-black/20 rounded-lg p-1">
+                <button id="mic-btn" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-black/10 dark:hover:bg-white/10" aria-label="Use Microphone">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m7 10v4m0 0l-4-4m4 4l4-4m-6-4v-7a1 1 0 011-1h2a1 1 0 011 1v7" /></svg>
+                </button>
+                <input id="user-input" type="text" placeholder="Ask me anything..." class="w-full bg-transparent outline-none p-2 text-gray-800 dark:text-white placeholder-gray-500">
+                <button id="send-btn" class="p-2 rounded-full bg-indigo-500 text-white" aria-label="Send Message">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatContainer = document.getElementById('chat-container');
+            const chatLog = document.getElementById('chat-log');
+            const userInput = document.getElementById('user-input');
+            const sendBtn = document.getElementById('send-btn');
+            const typingIndicator = document.getElementById('typing-indicator');
+            const quickRepliesContainer = document.getElementById('quick-replies');
+            const feedbackSection = document.getElementById('feedback-section');
+            const emojiFeedback = document.getElementById('emoji-feedback');
+            const feedbackThanks = document.getElementById('feedback-thanks');
+            
+            // --- Feature Toggles & State ---
+            const themeToggle = document.getElementById('theme-toggle');
+            const ttsToggle = document.getElementById('tts-toggle');
+            const micBtn = document.getElementById('mic-btn');
+            let isTtsEnabled = false;
+            let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+            
+            // --- Theme Manager ---
+            const applyTheme = (isDark) => {
+                document.documentElement.classList.toggle('dark', isDark);
+                document.getElementById('theme-icon-sun').classList.toggle('hidden', !isDark);
+                document.getElementById('theme-icon-moon').classList.toggle('hidden', isDark);
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            };
+            themeToggle.addEventListener('click', () => applyTheme(!document.documentElement.classList.contains('dark')));
+            applyTheme(localStorage.getItem('theme') === 'dark');
+
+            // --- TTS Manager ---
+            ttsToggle.addEventListener('click', () => {
+                isTtsEnabled = !isTtsEnabled;
+                ttsToggle.classList.toggle('bg-indigo-500', isTtsEnabled);
+                ttsToggle.querySelector('svg').classList.toggle('text-white', isTtsEnabled);
+                if (isTtsEnabled) speak("Text to speech enabled.");
+            });
+            function speak(text) {
+                if (!isTtsEnabled || !text) return;
+                const utterance = new SpeechSynthesisUtterance(text.replace(/\[.*?\]/g, '')); // Strip tags for speaking
+                speechSynthesis.speak(utterance);
+            }
+
+            // --- Voice Recognition ---
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                const recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.lang = 'en-US';
+                recognition.interimResults = false;
+                micBtn.addEventListener('click', () => {
+                    micBtn.classList.add('text-red-500');
+                    recognition.start();
+                });
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    userInput.value = transcript;
+                    sendMessage();
+                };
+                recognition.onend = () => micBtn.classList.remove('text-red-500');
+            } else {
+                micBtn.style.display = 'none';
+            }
+
+            // --- Core Chat Logic ---
+            const scrollToBottom = () => chatLog.scrollTop = chatLog.scrollHeight;
+            
+            const addMessage = (sender, text) => {
+                const messageEl = document.createElement('div');
+                messageEl.classList.add('chat-message', 'mb-4', 'flex', 'items-end', 'max-w-md');
+                
+                let renderedText = text.replace(/\[image:(.*?)\]/g, '<img src="$1" alt="Bot image" class="rounded-lg mt-2 w-full">');
+                const quickReplyMatches = [...renderedText.matchAll(/\[(.*?)\]/g)];
+                renderedText = renderedText.replace(/\[(.*?)\]/g, '').trim();
+
+                const avatar = `<img src="${sender === 'user' ? 'https://i.ibb.co/1q2I9zV/user-avatar.png' : 'https://i.ibb.co/6bs2P32/aura-avatar.png'}" alt="${sender}" class="w-8 h-8 rounded-full flex-shrink-0">`;
+                const bubble = `<div class="mx-2 p-3 rounded-2xl">${renderedText}</div>`;
+                
+                if (sender === 'user') {
+                    messageEl.classList.add('self-end', 'flex-row-reverse');
+                    messageEl.innerHTML = bubble + avatar;
+                    messageEl.querySelector('div').classList.add('bg-indigo-500', 'text-white');
+                } else {
+                    messageEl.classList.add('self-start');
+                    messageEl.innerHTML = avatar + bubble;
+                    messageEl.querySelector('div').classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-900', 'dark:text-white');
+                    speak(text);
+                }
+                chatLog.appendChild(messageEl);
+                renderQuickReplies(quickReplyMatches);
+                scrollToBottom();
+            };
+            
+            const renderQuickReplies = (matches) => {
+                quickRepliesContainer.innerHTML = '';
+                if (matches.length > 0) {
+                    matches.forEach(match => {
+                        const btn = document.createElement('button');
+                        btn.className = "px-3 py-1.5 text-sm border border-indigo-400 text-indigo-400 rounded-full hover:bg-indigo-400 hover:text-white transition-colors";
+                        btn.textContent = match[1];
+                        btn.onclick = () => {
+                            userInput.value = match[1];
+                            sendMessage();
+                            quickRepliesContainer.innerHTML = '';
+                        };
+                        quickRepliesContainer.appendChild(btn);
+                    });
+                }
+            };
+            
+            async function sendMessage() {
+                const msg = userInput.value.trim();
+                if (!msg) return;
+
+                addMessage('user', msg);
+                chatHistory.push(`User: ${msg}`);
+                userInput.value = '';
+                typingIndicator.style.display = 'block';
+                scrollToBottom();
+
+                try {
+                    const res = await fetch('/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: msg, history: chatHistory.slice(-6) }) // Send last 6 turns
+                    });
+                    const data = await res.json();
+                    let reply = data.error ? `Error: ${data.error}` : data.reply;
+                    
+                    setTimeout(() => {
+                        typingIndicator.style.display = 'none';
+                        addMessage('bot', reply);
+                        chatHistory.push(`Aura: ${reply}`);
+                        localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+                        // Show feedback after 2 user messages
+                        const userMessages = chatHistory.filter(m => m.startsWith('User:')).length;
+                        if (userMessages === 2) feedbackSection.style.display = 'block';
+                    }, 1000 + Math.random() * 500);
+
+                } catch (err) {
+                    typingIndicator.style.display = 'none';
+                    addMessage('bot', 'Error: Could not connect to server.');
+                }
+            }
+
+            sendBtn.addEventListener('click', sendMessage);
+            userInput.addEventListener('keypress', (e) => e.key === 'Enter' && sendMessage());
+
+            // --- Placeholder Hints ---
+            const hints = ["How can I manage anxiety?", "Tell me about self-care.", "I'm feeling down today...", "Ask me anything!"];
+            let hintIndex = 0;
+            setInterval(() => {
+                hintIndex = (hintIndex + 1) % hints.length;
+                userInput.placeholder = hints[hintIndex];
+            }, 4000);
+            
+            // --- Feedback Logic ---
+            emojiFeedback.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    feedbackThanks.textContent = "Thanks for your feedback!";
+                    emojiFeedback.style.display = 'none';
+                }
+            });
+
+            // --- Initial Load ---
+            function initializeChat() {
+                chatContainer.classList.remove('opacity-0', 'translate-y-4');
+                chatHistory.forEach(msg => {
+                    const [sender, ...textParts] = msg.split(': ');
+                    addMessage(sender.toLowerCase(), textParts.join(': '));
+                });
+
+                if (chatHistory.length === 0) {
+                    const time = new Date().getHours();
+                    let greeting = "Hey there! 👋";
+                    if (time < 12) greeting = "Good morning! ☀️";
+                    else if (time < 18) greeting = "Good afternoon! 🌤️";
+                    else greeting = "Good evening! 🌙";
+                    setTimeout(() => addMessage('bot', `${greeting} I'm Aura, your personal support companion. How are you feeling today?`), 500);
+                }
+                scrollToBottom();
+            }
+            
+            initializeChat();
+        });
+    </script>
+</body>
+</html>

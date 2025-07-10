@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindWell - Your Space to Heal. Connect. Grow.</title>
+
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- GSAP (Animation) & ScrollTrigger Plugin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <!-- Swiper.js for Carousel -->
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-light: #f5f5f5;
+            --text-dark: #e5e5e5;
+            --text-light: #171717;
+            --accent-cyan: #22d3ee;
+            --accent-violet: #8b5cf6;
+            --glass-bg-dark: rgba(23, 23, 23, 0.5);
+            --glass-border-dark: rgba(51, 51, 51, 0.5);
+            --glass-bg-light: rgba(255, 255, 255, 0.5);
+            --glass-border-light: rgba(229, 229, 229, 0.5);
+        }
+
+        html.dark { color-scheme: dark; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-light);
+            transition: background-color 0.5s ease, color 0.5s ease;
+            overflow-x: hidden;
+        }
+
+        html.dark body { background-color: var(--bg-dark); color: var(--text-dark); }
+        
+        .animated-gradient {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient-move 15s ease infinite;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -1;
+            filter: blur(100px);
+            opacity: 0.3;
+        }
+
+        @keyframes gradient-move {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-card {
+            background: var(--glass-bg-light);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border-light);
+            transition: all 0.5s ease;
+        }
+        
+        html.dark .glass-card {
+            background: var(--glass-bg-dark);
+            border: 1px solid var(--glass-border-dark);
+        }
+        
+        .swiper-pagination-bullet-active { background-color: var(--accent-cyan) !important; }
+        
+        .g-fade-in { opacity: 0; transform: translateY(30px); }
+        .g-stagger-container > * { opacity: 0; transform: translateY(30px); }
+
+        #scroll-to-top {
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+            transform: translateY(20px);
+        }
+        #scroll-to-top.visible {
+            opacity: 1; visibility: visible; transform: translateY(0);
+        }
+        
+        .chat-bubble-text {
+            visibility: hidden; opacity: 0;
+            transform: translateY(10px) scale(0.9);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .group:hover .chat-bubble-text {
+            visibility: visible; opacity: 1; transform: translateY(0) scale(1);
+        }
+
+        /* Modal Styles */
+        .modal-container {
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-container.open {
+            opacity: 1; visibility: visible;
+        }
+        .modal-content {
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+        .modal-container.open .modal-content {
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="animated-gradient"></div>
+
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 p-4">
+        <div class="glass-card max-w-7xl mx-auto rounded-xl flex justify-between items-center p-3">
+            <h1 class="text-2xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-500">MindWell</h1>
+            <div class="flex items-center space-x-2">
+                <button id="profile-btn" aria-label="About the Creator" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-neutral-500/20 transition-colors">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                </button>
+                <button id="theme-toggle" aria-label="Toggle dark mode" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-neutral-500/20 transition-colors">
+                    <svg id="theme-icon-sun" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                    <svg id="theme-icon-moon" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Creator Profile Modal -->
+    <div id="profile-modal-container" class="modal-container fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4">
+        <div class="modal-content glass-card rounded-2xl w-full max-w-md p-6 sm:p-8">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-white/10">
+                <h4 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-500">About the Creator</h4>
+                <button id="close-profile-btn" class="text-3xl opacity-50 hover:opacity-100 transition-opacity">×</button>
+            </div>
+            <div class="flex flex-col sm:flex-row items-center gap-6 mb-8">
+                <img src="../static/prof.jpg" alt="Creator's Photo" class="w-24 h-24 rounded-full object-cover border-2 border-cyan-400 flex-shrink-0">
+                <div>
+                    <h5 class="text-xl font-semibold">JT</h5>
+                    <p class="text-sm opacity-80 mt-1">Thank you for visiting. I built MindWell to create a supportive space for mental health awareness. Every visit and every conversation matters.</p>
+                </div>
+            </div>
+            <div class="bg-black/20 dark:bg-white/5 p-6 rounded-lg">
+                <h5 class="text-lg font-semibold text-cyan-400 mb-4 text-center">Support This Project</h5>
+                <div class="flex flex-col sm:flex-row items-center gap-6">
+                    <div class="flex-1 text-center sm:text-left">
+                        <p class="text-sm opacity-80">Donate via GCash:</p>
+                        <p class="font-mono font-bold text-lg my-1">09499648383 </p>
+                        <p class="text-xs opacity-60">(Please add note: "MindWell Donation")</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <img id="small-qr-code" src="../static/qr.jpg" alt="GCash QR Code" class="w-28 h-28 rounded-lg bg-white p-1 cursor-pointer transition-transform hover:scale-105" title="Click to enlarge">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: Large QR Code Viewer Modal -->
+    <div id="qr-viewer-modal" class="modal-container fixed inset-0 bg-black/80 z-[110] flex items-center justify-center p-4">
+        <div class="relative modal-content">
+            <img src="../static/qr.jpg" alt="GCash QR Code - Large View" class="max-w-[80vw] sm:max-w-xs max-h-[80vh] w-auto h-auto rounded-xl bg-white p-4">
+            <button id="close-qr-viewer-btn" class="absolute -top-3 -right-3 text-3xl text-white bg-black/50 rounded-full w-10 h-10 flex items-center justify-center leading-none">×</button>
+        </div>
+    </div>
+
+    <main class="relative z-10">
+        <!-- All other main content remains unchanged -->
+        <!-- Hero Section -->
+        <section class="min-h-screen flex flex-col justify-center items-center text-center px-4">
+            <h2 class="text-5xl md:text-7xl font-black tracking-tight">
+                <span id="hero-headline"></span>
+            </h2>
+            <p class="g-fade-in max-w-2xl mx-auto mt-6 text-lg md:text-xl opacity-80">
+                We are here to raise awareness, break the stigma, and support each other in our mental health journeys.
+            </p>
+            <a href="messenger" target="_blank" class="g-fade-in mt-8 px-8 py-3 rounded-full font-bold text-white bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 transform hover:scale-105 transition-all duration-300">
+                Chat with Aura
+            </a>
+        </section>
+
+        <!-- Our Mission Section -->
+        <section id="mission" class="py-20 px-4">
+            <!-- ... content ... -->
+        </section>
+
+        <!-- What We Offer Section -->
+        <section id="services" class="py-20 px-4">
+            <!-- ... content ... -->
+        </section>
+        
+        <!-- Testimonials Section -->
+        <section id="testimonials" class="py-20 px-4">
+            <!-- ... content ... -->
+        </section>
+
+        <!-- Community Hub Section -->
+        <section id="community" class="py-20 px-4">
+             <!-- ... content ... -->
+        </section>
+    </main>
+    
+    <footer class="py-20 px-4 text-center">
+        <!-- ... content ... -->
+    </footer>
+
+    <!-- Floating Chat Button -->
+    <div class="group fixed bottom-6 right-6 z-40 flex flex-col items-center">
+        <div class="chat-bubble-text mb-2 w-48 rounded-lg bg-black/80 dark:bg-white/90 text-white dark:text-black text-center text-sm py-2 px-3 shadow-lg">
+            Chat with Aura now!
+        </div>
+        <a id="chatbotLink" href="messenger" target="_blank" aria-label="Chat with Aura"
+            class="w-16 h-16 bg-cyan-500 rounded-full flex items-center justify-center shadow-lg transform transition-transform duration-300 hover:scale-110">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white transition-transform duration-300 group-hover:-rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+        </a>
+    </div>
+
+    <!-- Scroll to Top Button -->
+    <button id="scroll-to-top" aria-label="Scroll to top" class="fixed bottom-6 left-6 w-12 h-12 rounded-full bg-cyan-400/80 backdrop-blur-sm text-black flex items-center justify-center shadow-lg hover:bg-cyan-400 transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+    </button>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- ALL PREVIOUS SCRIPT LOGIC ---
+        // (GSAP animations, theme toggle, swiper, mood logger, etc.)
+
+        // --- PROFILE MODAL LOGIC ---
+        const profileBtn = document.getElementById('profile-btn');
+        const profileModalContainer = document.getElementById('profile-modal-container');
+        const closeProfileBtn = document.getElementById('close-profile-btn');
+
+        const openProfileModal = () => profileModalContainer.classList.add('open');
+        const closeProfileModal = () => profileModalContainer.classList.remove('open');
+
+        profileBtn.addEventListener('click', openProfileModal);
+        closeProfileBtn.addEventListener('click', closeProfileModal);
+        profileModalContainer.addEventListener('click', (event) => {
+            if (event.target === profileModalContainer) closeProfileModal();
+        });
+
+        // --- NEW: QR CODE VIEWER LOGIC ---
+        const smallQrCode = document.getElementById('small-qr-code');
+        const qrViewerModal = document.getElementById('qr-viewer-modal');
+        const closeQrViewerBtn = document.getElementById('close-qr-viewer-btn');
+
+        const openQrViewer = () => qrViewerModal.classList.add('open');
+        const closeQrViewer = () => qrViewerModal.classList.remove('open');
+
+        if (smallQrCode && qrViewerModal && closeQrViewerBtn) {
+            smallQrCode.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevents profile modal from closing
+                openQrViewer();
+            });
+            closeQrViewerBtn.addEventListener('click', closeQrViewer);
+            qrViewerModal.addEventListener('click', (event) => {
+                if (event.target === qrViewerModal) closeQrViewer();
+            });
+        }
+        
+        // --- REMAINDER OF THE SCRIPT ---
+        // (GSAP, Theme Toggle, Swiper, etc.)
+        gsap.registerPlugin(ScrollTrigger);
+
+        const headlineText = "Your Space to Heal. Connect. Grow.";
+        const headlineEl = document.getElementById('hero-headline');
+        let i = 0;
+        function typeWriter() {
+            if (i < headlineText.length) {
+                headlineEl.innerHTML += headlineText.charAt(i);
+                i++;
+                setTimeout(typeWriter, 60);
+            } else {
+                gsap.fromTo(headlineEl, { borderRight: "0.15em solid var(--accent-cyan)" }, { borderRight: "0.15em solid transparent", repeat: -1, yoyo: true, duration: 0.5 });
+            }
+        }
+        typeWriter();
+
+        gsap.utils.toArray('.g-fade-in').forEach(el => {
+            gsap.fromTo(el, { opacity: 0, y: 30 }, {
+                opacity: 1, y: 0, duration: 1, ease: 'power3.out',
+                scrollTrigger: { trigger: el, start: "top 85%", toggleActions: "play none none reverse" }
+            });
+        });
+
+        gsap.utils.toArray('.g-stagger-container').forEach(container => {
+            gsap.fromTo(container.children, { opacity: 0, y: 30 }, {
+                opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', stagger: 0.2,
+                scrollTrigger: { trigger: container, start: "top 85%", toggleActions: "play none none reverse" }
+            });
+        });
+        
+        const counters = { users: 1573, moods: 842, resources: 3 };
+        gsap.to(counters, {
+            scrollTrigger: { trigger: '#counter-users', start: 'top 85%' },
+            duration: 2,
+            users: "+=1573", moods: "+=842", resources: "+=3",
+            ease: "power1.out",
+            onUpdate: () => {
+                document.getElementById('counter-users').innerText = Math.round(counters.users);
+                document.getElementById('counter-moods').innerText = Math.round(counters.moods);
+            }
+        });
+
+        const serviceCards = document.querySelectorAll('.service-card');
+        serviceCards.forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+                const rotateX = -1 * ((y / rect.height * 20) - 10);
+                const rotateY = (x / rect.width * 20) - 10;
+                gsap.to(card, { rotationX: rotateX, rotationY: rotateY, transformPerspective: 1000, ease: 'power1.out', duration: 0.5 });
+            });
+            card.addEventListener('mouseleave', () => {
+                gsap.to(card, { rotationX: 0, rotationY: 0, ease: 'power1.out', duration: 0.5 });
+            });
+        });
+
+        const themeToggle = document.getElementById('theme-toggle');
+        const sunIcon = document.getElementById('theme-icon-sun');
+        const moonIcon = document.getElementById('theme-icon-moon');
+        const html = document.documentElement;
+
+        const applyTheme = (isDark) => {
+            html.classList.toggle('dark', isDark);
+            sunIcon.classList.toggle('hidden', !isDark);
+            moonIcon.classList.toggle('hidden', isDark);
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        };
+        themeToggle.addEventListener('click', () => applyTheme(!html.classList.contains('dark')));
+        applyTheme(localStorage.getItem('theme') === 'dark');
+
+        new Swiper('.swiper-container', {
+            loop: true, autoplay: { delay: 5000, disableOnInteraction: false },
+            pagination: { el: '.swiper-pagination', clickable: true },
+        });
+
+        const moodInput = document.getElementById('moodInput');
+        const logMoodBtn = document.getElementById('logMood');
+        const moodLogContainer = document.getElementById('moodLog');
+        let moods = JSON.parse(localStorage.getItem('moods') || '[]');
+        const updateLog = () => {
+            moodLogContainer.innerHTML = moods.length ? 
+                moods.map(entry => `<div>${entry.mood} - <span class="text-xs opacity-60">${entry.timestamp}</span></div>`).join('') :
+                `<p class="text-center opacity-50">Log your first mood to see it here.</p>`;
+            moodLogContainer.scrollTop = moodLogContainer.scrollHeight;
+        };
+        logMoodBtn.addEventListener('click', () => {
+            const mood = moodInput.value.trim();
+            if (mood) {
+                const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                moods.unshift({ mood, timestamp });
+                if (moods.length > 5) moods.pop();
+                localStorage.setItem('moods', JSON.stringify(moods));
+                moodInput.value = '';
+                updateLog();
+            }
+        });
+        updateLog();
+
+        const checklistContainer = document.getElementById('checklist');
+        const tasks = [
+            { id: 'task1', text: 'Take a 10-minute walk' }, { id: 'task2', text: 'Drink a glass of water' },
+            { id: 'task3', text: 'Practice deep breathing' }, { id: 'task4', text: 'Write one positive thought' }
+        ];
+        tasks.forEach(task => {
+            const isChecked = localStorage.getItem(`task_${task.id}`) === 'true';
+            const li = document.createElement('li');
+            li.className = 'flex items-center';
+            li.innerHTML = `<input type="checkbox" id="${task.id}" class="h-5 w-5 mr-3 rounded border-neutral-500 text-cyan-400 focus:ring-cyan-400 bg-transparent" ${isChecked ? 'checked' : ''}><label for="${task.id}" class="transition-all ${isChecked ? 'line-through opacity-50' : ''}">${task.text}</label>`;
+            checklistContainer.appendChild(li);
+            const checkbox = li.querySelector('input');
+            const label = li.querySelector('label');
+            checkbox.addEventListener('change', (e) => {
+                label.classList.toggle('line-through', e.target.checked);
+                label.classList.toggle('opacity-50', e.target.checked);
+                localStorage.setItem(`task_${e.target.id}`, e.target.checked);
+            });
+        });
+
+        const scrollTopBtn = document.getElementById('scroll-to-top');
+        window.addEventListener('scroll', () => {
+            scrollTopBtn.classList.toggle('visible', window.scrollY > 300);
+        });
+        scrollTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
+    </script>
+</body>
+</html>
